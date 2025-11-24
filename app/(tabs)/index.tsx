@@ -1,98 +1,114 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import MoviesCard from "@/components/MoviesCard";
+import SearchBar from "@/components/SearchBar";
+import { icons } from "@/constants/icons";
+import { images } from "@/constants/images";
+import { fetchMovies } from "@/services/api";
+import useFetch from "@/services/useFetch";
+import { Text } from "@react-navigation/elements";
+import { useRouter } from "expo-router";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  ScrollView,
+  View,
+} from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function Index() {
+  const router = useRouter();
 
-export default function HomeScreen() {
+  // fetchMovies now returns { results, totalResults }
+  const {
+    data, // will be { results: Movie[], totalResults: number } or null
+    loading: moviesLoading,
+    error: moviesError,
+  } = useFetch(() => fetchMovies({ query: "" }), true);
+
+  // normalize values for rendering
+  const movies = data?.results ?? [];
+  const totalResults = data?.totalResults ?? movies.length;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
+    <>
+      <View style={{ flex: 1, backgroundColor: "#030014" }}>
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={images.bg}
+          style={{ position: "absolute", width: "100%", zIndex: 0 }}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+        <ScrollView
+          style={{ flex: 1, paddingHorizontal: 5 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ minHeight: "100%", paddingBottom: 10 }}
+        >
+          <Image
+            source={icons.logo}
+            style={{
+              width: 48,
+              height: 40,
+              marginTop: 80,
+              marginBottom: 20,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+          {moviesLoading ? (
+            <ActivityIndicator
+              size="large"
+              color="#0000ff"
+              style={{ marginTop: 40, alignSelf: "center" }}
+            />
+          ) : moviesError ? (
+            <Text style={{ color: "#fff", marginTop: 20 }}>
+              Error: {moviesError?.message}
+            </Text>
+          ) : (
+            <View style={{ flex: 1, marginTop: 20 }}>
+              <SearchBar
+                onPress={() => router.push("/search")}
+                placeholder="Search for a movie"
+              />
+
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: "#FFFFFF",
+                  fontWeight: "bold",
+                  marginTop: 20,
+                  marginBottom: 6,
+                }}
+              >
+                Latest Movies
+              </Text>
+
+              {/* Show counts */}
+              <Text style={{ fontSize: 13, color: "#AAAAAA", marginBottom: 8 }}>
+                Showing {movies.length} of {totalResults} results
+              </Text>
+
+              <FlatList
+                data={movies.slice(0, 48)} // still safe: if fewer items, slice won't error
+                renderItem={({ item }) => <MoviesCard {...item} />}
+                keyExtractor={(item) => item.id} // imdbID is already a string
+                numColumns={3}
+                columnWrapperStyle={{
+                  justifyContent: "flex-start",
+                  gap: 20,
+                  paddingRight: 5,
+                  marginBottom: 10,
+                }}
+                style={{ marginTop: 8, paddingBottom: 128 }}
+                scrollEnabled={false}
+                ListEmptyComponent={
+                  <Text style={{ color: "#fff", marginTop: 20 }}>
+                    No movies found.
+                  </Text>
+                }
+              />
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
