@@ -3,6 +3,7 @@ import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
+import { updateSearchCount } from "@/services/appwrite";
 import useFetch from "@/services/useFetch";
 import { Text } from "@react-navigation/elements";
 import { useEffect, useState } from "react";
@@ -14,7 +15,7 @@ export default function Search() {
 
   // fetchMovies now returns { results, totalResults }
   const {
-    data, // will be { results: Movie[], totalResults: number } or null
+    data:movies, // will be { results: Movie[], totalResults: number } or null
     loading,
     error,
     refetch: loadMovies,
@@ -25,6 +26,10 @@ export default function Search() {
     const timeoutId =setTimeout(async () => {
       if (searchQuery.trim()) {
         await loadMovies();
+
+        if(movies?.length>0 && movies?.[0])
+        await updateSearchCount(searchQuery,movies[0]);
+
       } else {
         reset();
       }
@@ -32,8 +37,7 @@ export default function Search() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  const movies = data?.results ?? [];
-  const totalResults = data?.totalResults ?? movies.length;
+  
   return (
     <>
       <View style={{ flex: 1, backgroundColor: "#030014" }}>

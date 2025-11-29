@@ -19,14 +19,11 @@ export default function Index() {
 
   // fetchMovies now returns { results, totalResults }
   const {
-    data, // will be { results: Movie[], totalResults: number } or null
+    data:movies, // will be { results: Movie[], totalResults: number } or null
     loading: moviesLoading,
     error: moviesError,
   } = useFetch(() => fetchMovies({ query: "" }), true);
 
-  // normalize values for rendering
-  const movies = data?.results ?? [];
-  const totalResults = data?.totalResults ?? movies.length;
 
   return (
     <>
@@ -81,13 +78,8 @@ export default function Index() {
                 Latest Movies
               </Text>
 
-              {/* Show counts */}
-              <Text style={{ fontSize: 13, color: "#AAAAAA", marginBottom: 8 }}>
-                Showing {movies.length} of {totalResults} results
-              </Text>
-
               <FlatList
-                data={movies.slice(0, 48)} // still safe: if fewer items, slice won't error
+                data={movies} // still safe: if fewer items, slice won't error
                 renderItem={({ item }) => <MoviesCard {...item} />}
                 keyExtractor={(item) => item.id} // imdbID is already a string
                 numColumns={3}

@@ -4,23 +4,16 @@ import { Link } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 
-type Movie = {
-  id: string; // imdbID
-  title: string;
-  year?: string;
-  poster?: string | null;
-  rating?: string;
-};
 
-const MoviesCard = ({ id, poster, title, year, rating }: Movie) => {
+const MoviesCard = ({ id, poster_path, title, vote_average, release_date}: Movie) => {
   return (
-    <Link href={{ pathname: "/movies/[id]", params: { id } }} asChild>
+    <Link href={`/movies/${id}`} asChild>
       <TouchableOpacity style={{ width: "30%" }}>
         {/* Poster */}
         <Image
           source={{
-            uri: poster
-              ? poster
+            uri: poster_path
+              ? `https://image.tmdb.org/t/p/w500${poster_path}`
               : "https://placehold.co/600x400/1a1a1a/ffffff.png",
           }}
           style={{ width: "100%", height: 208, borderRadius: 8 }}
@@ -56,7 +49,7 @@ const MoviesCard = ({ id, poster, title, year, rating }: Movie) => {
               fontWeight: "600",
             }}
           >
-            {rating || "N/A"}
+            {Math.round(vote_average/2)}
           </Text>
         </View>
 
@@ -68,7 +61,7 @@ const MoviesCard = ({ id, poster, title, year, rating }: Movie) => {
             marginTop: 2,
           }}
         >
-          {year || "Unknown Year"}
+          {release_date?.split("-")[0]}
         </Text>
       </TouchableOpacity>
     </Link>
